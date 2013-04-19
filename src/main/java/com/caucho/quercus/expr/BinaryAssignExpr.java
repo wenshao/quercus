@@ -32,97 +32,94 @@ package com.caucho.quercus.expr;
 import com.caucho.quercus.Location;
 import com.caucho.quercus.env.Env;
 import com.caucho.quercus.env.Value;
-import com.caucho.quercus.env.Var;
 
 /**
  * Represents a PHP assignment expression.
  */
 public class BinaryAssignExpr extends Expr {
-  protected final AbstractVarExpr _var;
-  protected final Expr _value;
 
-  public BinaryAssignExpr(Location location, AbstractVarExpr var, Expr value)
-  {
-    super(location);
+    protected final AbstractVarExpr var;
+    protected final Expr            value;
 
-    _var = var;
-    _value = value;
-  }
+    public BinaryAssignExpr(Location location, AbstractVarExpr var, Expr value){
+        super(location);
 
-  public BinaryAssignExpr(AbstractVarExpr var, Expr value)
-  {
-    _var = var;
-    _value = value;
-  }
+        this.var = var;
+        this.value = value;
+    }
 
-  /**
-   * Creates a assignment
-   * @param location
-   */
-  @Override
-  public Expr createCopy(ExprFactory factory)
-  {
-    // quercus/3d9e
-    return factory.createCopy(this);
-  }
+    public BinaryAssignExpr(AbstractVarExpr var, Expr value){
+        this.var = var;
+        this.value = value;
+    }
 
-  /**
-   * Returns true if a static false value.
-   */
-  @Override
-  public boolean isAssign()
-  {
-    return true;
-  }
+    /**
+     * Creates a assignment
+     * 
+     * @param location
+     */
+    @Override
+    public Expr createCopy(ExprFactory factory) {
+        // quercus/3d9e
+        return factory.createCopy(this);
+    }
 
-  /**
-   * Evaluates the expression.
-   *
-   * @param env the calling environment.
-   *
-   * @return the expression value.
-   */
-  @Override
-  public Value eval(Env env)
-  {
-    return _var.evalAssignValue(env, _value);
-  }
+    /**
+     * Returns true if a static false value.
+     */
+    @Override
+    public boolean isAssign() {
+        return true;
+    }
 
-  /**
-   * Evaluates the expression.
-   *
-   * @param env the calling environment.
-   *
-   * @return the expression value.
-   */
-  @Override
-  public Value evalCopy(Env env)
-  {
-    // php/0d9e
-    return eval(env).copy();
-  }
+    /**
+     * Evaluates the expression.
+     * 
+     * @param env the calling environment.
+     * @return the expression value.
+     */
+    @Override
+    public Value eval(Env env) {
+        return this.var.evalAssignValue(env, this.value);
+    }
 
-  /**
-   * Evaluates the expression.
-   *
-   * @param env the calling environment.
-   *
-   * @return the expression value.
-   */
-  @Override
-  public Value evalRef(Env env)
-  {
-    Value value = _value.evalCopy(env);
+    /**
+     * Evaluates the expression.
+     * 
+     * @param env the calling environment.
+     * @return the expression value.
+     */
+    @Override
+    public Value evalCopy(Env env) {
+        // php/0d9e
+        return eval(env).copy();
+    }
 
-    _var.evalAssignValue(env, value);
+    /**
+     * Evaluates the expression.
+     * 
+     * @param env the calling environment.
+     * @return the expression value.
+     */
+    @Override
+    public Value evalRef(Env env) {
+        Value value = this.value.evalCopy(env);
 
-    // php/03d9, php/03mk
-    return _var.eval(env);
-  }
+        this.var.evalAssignValue(env, value);
 
-  public String toString()
-  {
-    return _var + "=" + _value;
-  }
+        // php/03d9, php/03mk
+        return this.var.eval(env);
+    }
+
+    public String toString() {
+        return this.var + "=" + this.value;
+    }
+
+    public AbstractVarExpr getVar() {
+        return var;
+    }
+
+    public Expr getValue() {
+        return value;
+    }
 }
-

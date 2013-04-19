@@ -63,308 +63,256 @@ import java.util.logging.Logger;
 /**
  * Servlet to call PHP through javax.script.
  */
-public class QuercusServletImpl extends HttpServlet
-{
-  private static final L10N L = new L10N(QuercusServletImpl.class);
-  private static final Logger log
-    = Logger.getLogger(QuercusServletImpl.class.getName());
+public class QuercusServletImpl extends HttpServlet {
 
-  protected QuercusContext _quercus;
-  protected ServletConfig _config;
-  protected ServletContext _servletContext;
+    private static final L10N   L   = new L10N(QuercusServletImpl.class);
+    private static final Logger log = Logger.getLogger(QuercusServletImpl.class.getName());
 
-  /**
-   * initialize the script manager.
-   */
-  @Override
-  public final void init(ServletConfig config)
-    throws ServletException
-  {
-    _config = config;
-    _servletContext = config.getServletContext();
+    protected QuercusContext    _quercus;
+    protected ServletConfig     _config;
+    protected ServletContext    _servletContext;
 
-    checkServletAPIVersion();
+    /**
+     * initialize the script manager.
+     */
+    @Override
+    public final void init(ServletConfig config) throws ServletException {
+        _config = config;
+        _servletContext = config.getServletContext();
 
-    Path pwd = new FilePath(_servletContext.getRealPath("/"));
-    Path webInfDir = new FilePath(_servletContext.getRealPath("/WEB-INF"));
+        checkServletAPIVersion();
 
-    getQuercus().setPwd(pwd);
-    getQuercus().setWebInfDir(webInfDir);
+        Path pwd = new FilePath(_servletContext.getRealPath("/"));
+        Path webInfDir = new FilePath(_servletContext.getRealPath("/WEB-INF"));
 
-    // need to set these for non-Resin containers
-    if (! CurrentTime.isTest() && ! getQuercus().isResin()) {
-      Vfs.setPwd(pwd);
-      WorkDir.setLocalWorkDir(webInfDir.lookup("work"));
-    }
+        getQuercus().setPwd(pwd);
+        getQuercus().setWebInfDir(webInfDir);
 
-    initImpl(config);
-
-    getQuercus().init();
-    getQuercus().start();
-  }
-
-  protected void initImpl(ServletConfig config)
-    throws ServletException
-  {
-  }
-
-  /**
-   * Sets the profiling mode
-   */
-  public void setProfileProbability(double probability)
-  {
-  }
-
-  /**
-   * Makes sure the servlet container supports Servlet API 2.4+.
-   */
-  protected void checkServletAPIVersion()
-  {
-    int major = _servletContext.getMajorVersion();
-    int minor = _servletContext.getMinorVersion();
-
-    if (major < 2 || major == 2 && minor < 4)
-      throw new QuercusRuntimeException(
-          L.l("Quercus requires Servlet API 2.4+."));
-  }
-
-  /**
-   * Service.
-   */
-  @Override
-  public final void service(HttpServletRequest request,
-                            HttpServletResponse response)
-    throws ServletException, IOException
-  {
-    Env env = null;
-    WriteStream ws = null;
-
-    try {
-      Path path = getPath(request);
-
-      QuercusPage page;
-
-      try {
-        page = getQuercus().parse(path);
-      }
-      catch (FileNotFoundException e) {
-        // php/2001
-        log.log(Level.FINER, e.toString(), e);
-
-        response.sendError(HttpServletResponse.SC_NOT_FOUND);
-
-        return;
-      }
-
-      ws = openWrite(response);
-
-      // php/2002
-      // for non-Resin containers
-      // for servlet filters that do post-request work after Quercus
-      ws.setDisableCloseSource(true);
-
-      // php/6006
-      ws.setNewlineString("\n");
-
-      QuercusContext quercus = getQuercus();
-
-      env = quercus.createEnv(page, ws, request, response);
-
-      // php/815d
-      env.setPwd(path.getParent());
-
-      quercus.setServletContext(_servletContext);
-
-      try {
-        env.start();
-
-        // php/2030, php/2032, php/2033
-        // Jetty hides server classes from web-app
-        // http://docs.codehaus.org/display/JETTY/Classloading
-        //
-        // env.setGlobalValue("request", env.wrapJava(request));
-        // env.setGlobalValue("response", env.wrapJava(response));
-        // env.setGlobalValue("servletContext", env.wrapJava(_servletContext));
-
-        StringValue prepend
-          = quercus.getIniValue("auto_prepend_file").toStringValue(env);
-        if (prepend.length() > 0) {
-          Path prependPath = env.lookup(prepend);
-
-          if (prependPath == null)
-            env.error(L.l("auto_prepend_file '{0}' not found.", prepend));
-          else {
-            QuercusPage prependPage = getQuercus().parse(prependPath);
-            prependPage.executeTop(env);
-          }
+        // need to set these for non-Resin containers
+        if (!CurrentTime.isTest() && !getQuercus().isResin()) {
+            Vfs.setPwd(pwd);
+            WorkDir.setLocalWorkDir(webInfDir.lookup("work"));
         }
 
-        env.executeTop();
+        initImpl(config);
 
-        StringValue append
-          = quercus.getIniValue("auto_append_file").toStringValue(env);
-        if (append.length() > 0) {
-          Path appendPath = env.lookup(append);
+        getQuercus().init();
+        getQuercus().start();
+    }
 
-          if (appendPath == null)
-            env.error(L.l("auto_append_file '{0}' not found.", append));
-          else {
-            QuercusPage appendPage = getQuercus().parse(appendPath);
-            appendPage.executeTop(env);
-          }
+    protected void initImpl(ServletConfig config) throws ServletException {
+    }
+
+    /**
+     * Sets the profiling mode
+     */
+    public void setProfileProbability(double probability) {
+    }
+
+    /**
+     * Makes sure the servlet container supports Servlet API 2.4+.
+     */
+    protected void checkServletAPIVersion() {
+        int major = _servletContext.getMajorVersion();
+        int minor = _servletContext.getMinorVersion();
+
+        if (major < 2 || major == 2 && minor < 4) throw new QuercusRuntimeException(
+                                                                                    L.l("Quercus requires Servlet API 2.4+."));
+    }
+
+    /**
+     * Service.
+     */
+    @Override
+    public final void service(HttpServletRequest request, HttpServletResponse response) throws ServletException,
+                                                                                       IOException {
+        Env env = null;
+        WriteStream ws = null;
+
+        try {
+            Path path = getPath(request);
+
+            QuercusPage page;
+
+            try {
+                page = getQuercus().parse(path);
+            } catch (FileNotFoundException e) {
+                // php/2001
+                log.log(Level.FINER, e.toString(), e);
+
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+
+                return;
+            }
+
+            ws = openWrite(response);
+
+            // php/2002
+            // for non-Resin containers
+            // for servlet filters that do post-request work after Quercus
+            ws.setDisableCloseSource(true);
+
+            // php/6006
+            ws.setNewlineString("\n");
+
+            QuercusContext quercus = getQuercus();
+
+            env = quercus.createEnv(page, ws, request, response);
+
+            // php/815d
+            env.setPwd(path.getParent());
+
+            quercus.setServletContext(_servletContext);
+
+            try {
+                env.start();
+
+                // php/2030, php/2032, php/2033
+                // Jetty hides server classes from web-app
+                // http://docs.codehaus.org/display/JETTY/Classloading
+                //
+                // env.setGlobalValue("request", env.wrapJava(request));
+                // env.setGlobalValue("response", env.wrapJava(response));
+                // env.setGlobalValue("servletContext", env.wrapJava(_servletContext));
+
+                StringValue prepend = quercus.getIniValue("auto_prepend_file").toStringValue(env);
+                if (prepend.length() > 0) {
+                    Path prependPath = env.lookup(prepend);
+
+                    if (prependPath == null) env.error(L.l("auto_prepend_file '{0}' not found.", prepend));
+                    else {
+                        QuercusPage prependPage = getQuercus().parse(prependPath);
+                        prependPage.executeTop(env);
+                    }
+                }
+
+                env.executeTop();
+
+                StringValue append = quercus.getIniValue("auto_append_file").toStringValue(env);
+                if (append.length() > 0) {
+                    Path appendPath = env.lookup(append);
+
+                    if (appendPath == null) env.error(L.l("auto_append_file '{0}' not found.", append));
+                    else {
+                        QuercusPage appendPage = getQuercus().parse(appendPath);
+                        appendPage.executeTop(env);
+                    }
+                }
+                // return;
+            } catch (QuercusExitException e) {
+                throw e;
+            } catch (QuercusErrorException e) {
+                throw e;
+            } catch (QuercusLineRuntimeException e) {
+                log.log(Level.FINE, e.toString(), e);
+
+                ws.println(e.getMessage());
+                // return;
+            } catch (QuercusValueException e) {
+                log.log(Level.FINE, e.toString(), e);
+
+                ws.println(e.toString());
+
+                // return;
+            } catch (Throwable e) {
+                if (response.isCommitted()) e.printStackTrace(ws.getPrintWriter());
+
+                ws = null;
+
+                throw e;
+            } finally {
+                if (env != null) env.close();
+
+                // don't want a flush for an exception
+                if (ws != null && env.getDuplex() == null) ws.close();
+            }
+        } catch (QuercusDieException e) {
+            // normal exit
+            log.log(Level.FINE, e.toString(), e);
+        } catch (QuercusExitException e) {
+            // normal exit
+            log.log(Level.FINER, e.toString(), e);
+        } catch (QuercusErrorException e) {
+            // error exit
+            log.log(Level.FINE, e.toString(), e);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable e) {
+            handleThrowable(response, e);
         }
-        //   return;
-      }
-      catch (QuercusExitException e) {
-        throw e;
-      }
-      catch (QuercusErrorException e) {
-        throw e;
-      }
-      catch (QuercusLineRuntimeException e) {
-        log.log(Level.FINE, e.toString(), e);
-
-        ws.println(e.getMessage());
-        //  return;
-      }
-      catch (QuercusValueException e) {
-        log.log(Level.FINE, e.toString(), e);
-
-        ws.println(e.toString());
-
-        //  return;
-      }
-      catch (Throwable e) {
-        if (response.isCommitted())
-          e.printStackTrace(ws.getPrintWriter());
-
-        ws = null;
-
-        throw e;
-      }
-      finally {
-        if (env != null)
-          env.close();
-
-        // don't want a flush for an exception
-        if (ws != null && env.getDuplex() == null)
-          ws.close();
-      }
-    }
-    catch (QuercusDieException e) {
-      // normal exit
-      log.log(Level.FINE, e.toString(), e);
-    }
-    catch (QuercusExitException e) {
-      // normal exit
-      log.log(Level.FINER, e.toString(), e);
-    }
-    catch (QuercusErrorException e) {
-      // error exit
-      log.log(Level.FINE, e.toString(), e);
-    }
-    catch (RuntimeException e) {
-      throw e;
-    }
-    catch (Throwable e) {
-      handleThrowable(response, e);
-    }
-  }
-
-  protected void handleThrowable(HttpServletResponse response, Throwable e)
-    throws IOException, ServletException
-  {
-    throw new ServletException(e);
-  }
-
-  protected WriteStream openWrite(HttpServletResponse response)
-    throws IOException
-  {
-    WriteStream ws;
-
-    OutputStream out = response.getOutputStream();
-
-    ws = Vfs.openWrite(out);
-
-    return ws;
-  }
-
-  protected Path getPath(HttpServletRequest req)
-  {
-    // php/8173
-    Path pwd = getQuercus().getPwd().copy();
-
-    String servletPath = QuercusRequestAdapter.getPageServletPath(req);
-
-    if (servletPath.startsWith("/")) {
-      servletPath = servletPath.substring(1);
     }
 
-    Path path = pwd.lookupChild(servletPath);
-
-    // php/2010, php/2011, php/2012
-    if (path.isFile()) {
-      return path;
+    protected void handleThrowable(HttpServletResponse response, Throwable e) throws IOException, ServletException {
+        throw new ServletException(e);
     }
 
-    StringBuilder sb = new StringBuilder();
+    protected WriteStream openWrite(HttpServletResponse response) throws IOException {
+        WriteStream ws;
 
-    sb.append(servletPath);
+        OutputStream out = response.getOutputStream();
 
-    String pathInfo = QuercusRequestAdapter.getPagePathInfo(req);
+        ws = Vfs.openWrite(out);
 
-    if (pathInfo != null) {
-      sb.append(pathInfo);
+        return ws;
     }
 
-    String scriptPath = sb.toString();
+    protected Path getPath(HttpServletRequest req) {
+        // php/8173
+        Path pwd = getQuercus().getPwd().copy();
 
-    path = pwd.lookupChild(scriptPath);
+        String servletPath = QuercusRequestAdapter.getPageServletPath(req);
 
-    return path;
+        if (servletPath.startsWith("/")) {
+            servletPath = servletPath.substring(1);
+        }
 
-    /* jetty getRealPath() de-references symlinks, which causes problems with MergePath
-    // php/8173
-    Path pwd = getQuercus().getPwd().copy();
+        Path path = pwd.lookupChild(servletPath);
 
-    String scriptPath = QuercusRequestAdapter.getPageServletPath(req);
-    String pathInfo = QuercusRequestAdapter.getPagePathInfo(req);
+        // php/2010, php/2011, php/2012
+        if (path.isFile()) {
+            return path;
+        }
 
-    Path path = pwd.lookup(req.getRealPath(scriptPath));
+        StringBuilder sb = new StringBuilder();
 
-    if (path.isFile())
-      return path;
+        sb.append(servletPath);
 
-    // XXX: include
+        String pathInfo = QuercusRequestAdapter.getPagePathInfo(req);
 
-    String fullPath;
-    if (pathInfo != null)
-      fullPath = scriptPath + pathInfo;
-    else
-      fullPath = scriptPath;
+        if (pathInfo != null) {
+            sb.append(pathInfo);
+        }
 
-    return pwd.lookup(req.getRealPath(fullPath));
-    */
-  }
+        String scriptPath = sb.toString();
 
-  /**
-   * Returns the Quercus instance.
-   */
-  protected QuercusContext getQuercus()
-  {
-    if (_quercus == null) {
-      _quercus = new QuercusContext();
+        path = pwd.lookupChild(scriptPath);
+
+        return path;
+
+        /*
+         * jetty getRealPath() de-references symlinks, which causes problems with MergePath // php/8173 Path pwd =
+         * getQuercus().getPwd().copy(); String scriptPath = QuercusRequestAdapter.getPageServletPath(req); String
+         * pathInfo = QuercusRequestAdapter.getPagePathInfo(req); Path path = pwd.lookup(req.getRealPath(scriptPath));
+         * if (path.isFile()) return path; // XXX: include String fullPath; if (pathInfo != null) fullPath = scriptPath
+         * + pathInfo; else fullPath = scriptPath; return pwd.lookup(req.getRealPath(fullPath));
+         */
     }
 
-    return _quercus;
-  }
+    /**
+     * Returns the Quercus instance.
+     */
+    protected QuercusContext getQuercus() {
+        if (_quercus == null) {
+            _quercus = new QuercusContext();
+        }
 
-  /**
-   * Destroys the quercus instance.
-   */
-  public void destroy()
-  {
-    _quercus.close();
-  }
+        return _quercus;
+    }
+
+    /**
+     * Destroys the quercus instance.
+     */
+    public void destroy() {
+        _quercus.close();
+    }
 }
-

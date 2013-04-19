@@ -44,139 +44,121 @@ import java.util.HashMap;
 /**
  * Represents an interpreted Quercus program.
  */
-public class InterpretedPage extends QuercusPage
-{
-  private final QuercusProgram _program;
+public class InterpretedPage extends QuercusPage {
 
-  public InterpretedPage(QuercusProgram program)
-  {
-    _program = program;
-  }
+    private final QuercusProgram _program;
 
-  /**
-   * Returns true if the page is modified.
-   */
-  @Override
-  public boolean isModified()
-  {
-    return _program.isModified();
-  }
+    public InterpretedPage(QuercusProgram program){
+        _program = program;
+    }
 
-  /**
-   * Returns any profile page.
-   */
-  @Override
-  public QuercusPage getProfilePage()
-  {
-    return _program.getProfilePage();
-  }
+    /**
+     * Returns true if the page is modified.
+     */
+    @Override
+    public boolean isModified() {
+        return _program.isModified();
+    }
 
-  /**
-   * Returns any profile page.
-   */
-  @Override
-  public QuercusPage getCompiledPage()
-  {
-    return _program.getCompiledPage();
-  }
+    /**
+     * Returns any profile page.
+     */
+    @Override
+    public QuercusPage getProfilePage() {
+        return _program.getProfilePage();
+    }
 
-  /**
-   * Execute the program
-   *
-   * @param env the calling environment
-   */
-  public Value execute(Env env)
-  {
-    Value result = _program.execute(env);
+    /**
+     * Returns any profile page.
+     */
+    @Override
+    public QuercusPage getCompiledPage() {
+        return _program.getCompiledPage();
+    }
 
-    if (result == null)
-      result = LongValue.ONE;
+    /**
+     * Execute the program
+     * 
+     * @param env the calling environment
+     */
+    public Value execute(Env env) {
+        Value result = _program.execute(env);
 
-    return result;
-  }
+        if (result == null) result = LongValue.ONE;
 
-  /**
-   * Returns the pwd according to the source page.
-   */
-  @Override
-  public Path getPwd(Env env)
-  {
-    return getSelfPath(env).getParent();
-  }
+        return result;
+    }
 
-  /**
-   * Returns the pwd according to the source page.
-   */
-  public Path getSelfPath(Env env)
-  {
-    return _program.getSourcePath();
-  }
+    /**
+     * Returns the pwd according to the source page.
+     */
+    @Override
+    public Path getPwd(Env env) {
+        return getSelfPath(env).getParent();
+    }
 
-  /**
-   * Imports the page definitions.
-   */
-  public void init(Env env)
-  {
-    _program.init(env);
-  }
+    /**
+     * Returns the pwd according to the source page.
+     */
+    public Path getSelfPath(Env env) {
+        return _program.getSourcePath();
+    }
 
-  /**
-   * Imports the page definitions.
-   */
-  public void importDefinitions(Env env)
-  {
-    _program.importDefinitions(env);
-  }
+    /**
+     * Imports the page definitions.
+     */
+    public void init(Env env) {
+        _program.init(env);
+    }
 
-  /**
-   * Finds the function
-   */
-  @Override
-  public AbstractFunction findFunction(StringValue name)
-  {
-    return _program.findFunction(name);
-  }
+    /**
+     * Imports the page definitions.
+     */
+    public void importDefinitions(Env env) {
+        _program.importDefinitions(env);
+    }
 
-  /**
-   * Finds the class
-   */
-  public InterpretedClassDef findClass(String name)
-  {
-    //return _program.findClass(name);
-    return null;
-  }
+    /**
+     * Finds the function
+     */
+    @Override
+    public AbstractFunction findFunction(StringValue name) {
+        return _program.findFunction(name);
+    }
 
-  /**
-   * Returns the class map.
-   */
-  public HashMap<String,ClassDef> getClassMap()
-  {
-    //return _program.getClassMap();
-    return null;
-  }
+    /**
+     * Finds the class
+     */
+    public InterpretedClassDef findClass(String name) {
+        // return _program.findClass(name);
+        return null;
+    }
 
-  /**
-   * Sets a runtime function array after an env.
-   */
-  @Override
-  public boolean setRuntimeFunction(AbstractFunction []funList)
-  {
-    return _program.setRuntimeFunction(funList);
-  }
+    /**
+     * Returns the class map.
+     */
+    public HashMap<String, ClassDef> getClassMap() {
+        // return _program.getClassMap();
+        return null;
+    }
 
-  public boolean equals(Object o)
-  {
-    if (! (o instanceof InterpretedPage))
-      return false;
+    /**
+     * Sets a runtime function array after an env.
+     */
+    @Override
+    public boolean setRuntimeFunction(AbstractFunction[] funList) {
+        return _program.setRuntimeFunction(funList);
+    }
 
-    InterpretedPage page = (InterpretedPage) o;
+    public boolean equals(Object o) {
+        if (!(o instanceof InterpretedPage)) return false;
 
-    return _program == page._program;
-  }
+        InterpretedPage page = (InterpretedPage) o;
 
-  public String toString()
-  {
-    return getClass().getSimpleName() + "[" +  _program.getSourcePath() + "]";
-  }
+        return _program == page._program;
+    }
+
+    public String toString() {
+        return getClass().getSimpleName() + "[" + _program.getSourcePath() + "]";
+    }
 }
-

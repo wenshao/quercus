@@ -42,126 +42,108 @@ import java.util.ArrayList;
  * Represents a switch statement.
  */
 public class SwitchStatement extends Statement {
-  protected final Expr _value;
 
-  protected final Expr[][] _cases;
-  protected final BlockStatement[] _blocks;
+    protected final Expr             _value;
 
-  protected final Statement _defaultBlock;
-  protected final String _label;
+    protected final Expr[][]         _cases;
+    protected final BlockStatement[] blocks;
 
-  public SwitchStatement(Location location,
-                         Expr value,
-                         ArrayList<Expr[]> caseList,
-                         ArrayList<BlockStatement> blockList,
-                         Statement defaultBlock,
-                         String label)
-  {
-    super(location);
+    protected final Statement        defaultBlock;
+    protected final String           _label;
 
-    _value = value;
+    public SwitchStatement(Location location, Expr value, ArrayList<Expr[]> caseList,
+                           ArrayList<BlockStatement> blockList, Statement defaultBlock, String label){
+        super(location);
 
-    _cases = new Expr[caseList.size()][];
-    caseList.toArray(_cases);
+        _value = value;
 
-    _blocks = new BlockStatement[blockList.size()];
-    blockList.toArray(_blocks);
+        _cases = new Expr[caseList.size()][];
+        caseList.toArray(_cases);
 
-    _defaultBlock = defaultBlock;
-    
-    for (int i = 0; i < _blocks.length; i++) {
-      _blocks[i].setParent(this);
-    }
-    
-    if (_defaultBlock != null)
-      _defaultBlock.setParent(this);
-    
-    _label = label;
-  }
+        this.blocks = new BlockStatement[blockList.size()];
+        blockList.toArray(this.blocks);
 
-  /**
-   * Executes the 'switch' statement, returning any value.
-   */
-  public Value execute(Env env)
-  {
-    try {
-      Value testValue = _value.eval(env);
+        this.defaultBlock = defaultBlock;
 
-      int len = _cases.length;
-
-      for (int i = 0; i < len; i++) {
-        Expr []values = _cases[i];
-
-        for (int j = 0; j < values.length; j++) {
-          Value caseValue = values[j].eval(env);
-
-          if (testValue.eq(caseValue)) {
-            Value retValue = _blocks[i].execute(env);
-
-            if (retValue instanceof BreakValue) {
-              BreakValue breakValue = (BreakValue) retValue;
-              
-              int target = breakValue.getTarget();
-              
-              if (target > 1)
-                return new BreakValue(target - 1);
-              else
-                return null;
-            }
-            else if (retValue instanceof ContinueValue) {
-              ContinueValue conValue = (ContinueValue) retValue;
-              
-              int target = conValue.getTarget();
-              
-              if (target > 1)
-                return new ContinueValue(target - 1);
-              else
-                return null;
-            }
-            else
-              return retValue;
-          }
+        for (int i = 0; i < this.blocks.length; i++) {
+            this.blocks[i].setParent(this);
         }
-      }
 
-      if (_defaultBlock != null) {
-        Value retValue = _defaultBlock.execute(env);
+        if (this.defaultBlock != null) {
+            this.defaultBlock.setParent(this);
+        }
 
-        if (retValue instanceof BreakValue)
-          return null;
-        else
-          return retValue;
-      }
-
-    }
-    catch (RuntimeException e) {
-      rethrow(e, RuntimeException.class);
+        _label = label;
     }
 
-    return null;
-  }
-
-  /**
-   * Returns true if control can go past the statement.
-   */
-  public int fallThrough()
-  {
-    return FALL_THROUGH;
-    /* php/367t, php/367u
-    if (_defaultBlock == null)
-      return FALL_THROUGH;
-
-    int fallThrough = _defaultBlock.fallThrough();
-
-    for (int i = 0; i < _blocks.length; i++) {
-      fallThrough &= _blocks[i].fallThrough();
+    public BlockStatement[] getBlocks() {
+        return blocks;
     }
 
-    if (fallThrough == BREAK_FALL_THROUGH)
-      return 0;
-    else
-      return fallThrough;
-    */
-  }
+    public Statement getDefaultBlock() {
+        return defaultBlock;
+    }
+
+    /**
+     * Executes the 'switch' statement, returning any value.
+     */
+    public Value execute(Env env) {
+        try {
+            Value testValue = _value.eval(env);
+
+            int len = _cases.length;
+
+            for (int i = 0; i < len; i++) {
+                Expr[] values = _cases[i];
+
+                for (int j = 0; j < values.length; j++) {
+                    Value caseValue = values[j].eval(env);
+
+                    if (testValue.eq(caseValue)) {
+                        Value retValue = blocks[i].execute(env);
+
+                        if (retValue instanceof BreakValue) {
+                            BreakValue breakValue = (BreakValue) retValue;
+
+                            int target = breakValue.getTarget();
+
+                            if (target > 1) return new BreakValue(target - 1);
+                            else return null;
+                        } else if (retValue instanceof ContinueValue) {
+                            ContinueValue conValue = (ContinueValue) retValue;
+
+                            int target = conValue.getTarget();
+
+                            if (target > 1) return new ContinueValue(target - 1);
+                            else return null;
+                        } else return retValue;
+                    }
+                }
+            }
+
+            if (defaultBlock != null) {
+                Value retValue = defaultBlock.execute(env);
+
+                if (retValue instanceof BreakValue) return null;
+                else return retValue;
+            }
+
+        } catch (RuntimeException e) {
+            rethrow(e, RuntimeException.class);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns true if control can go past the statement.
+     */
+    public int fallThrough() {
+        return FALL_THROUGH;
+        /*
+         * php/367t, php/367u if (_defaultBlock == null) return FALL_THROUGH; int fallThrough =
+         * _defaultBlock.fallThrough(); for (int i = 0; i < _blocks.length; i++) { fallThrough &=
+         * _blocks[i].fallThrough(); } if (fallThrough == BREAK_FALL_THROUGH) return 0; else return fallThrough;
+         */
+    }
 }
-

@@ -33,31 +33,27 @@ import com.caucho.vfs.WriteStream;
 
 /**
  * @author nnguyen
- *
  */
 public class CliEnv extends Env {
-  private final String[] _argv;
-  
-  public CliEnv(QuercusContext quercus,
-                QuercusPage page,
-                WriteStream out,
-                String[] argv)
-  {
-    super(quercus, page, out, null, null);
-    
-    _argv = argv;
-  }
-  
-  @Override
-  protected ArrayValue createArgv() {
-    ArrayValue array = new ArrayValueImpl();
-    
-    String[] argv = _argv;
-    
-    for (int i = 0; i < argv.length; i++) {
-      array.put(argv[i]);
+
+    private final String[] _argv;
+
+    public CliEnv(QuercusContext quercus, QuercusPage page, WriteStream out, String[] argv){
+        super(quercus, page, out, null, null);
+
+        _argv = argv;
     }
-    
-    return array;
-  }
+
+    @Override
+    protected ArrayValue createArgv() {
+        ArrayValue array = new ArrayValueImpl();
+
+        String[] argv = _argv;
+
+        for (int i = 0; i < argv.length; i++) {
+            array.put(argv[i]);
+        }
+
+        return array;
+    }
 }

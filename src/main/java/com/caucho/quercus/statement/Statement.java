@@ -49,21 +49,21 @@ abstract public class Statement {
 	public static final int BREAK_FALL_THROUGH = 0x1;
 	public static final int RETURN = 0x2;
 
-	private final Location _location;
+	private final Location location;
 
-	private Statement _parent;
-	private String _loopLabel;
+	private Statement parent;
+	private String loopLabel;
 
 	protected Statement() {
-		_location = Location.UNKNOWN;
+		location = Location.UNKNOWN;
 	}
 
 	protected Statement(Location location) {
-		_location = location;
+		this.location = location;
 	}
 
 	public final Location getLocation() {
-		return _location;
+		return location;
 	}
 
 	public boolean isLoop() {
@@ -71,11 +71,11 @@ abstract public class Statement {
 	}
 
 	final public Statement getParent() {
-		return _parent;
+		return parent;
 	}
 
 	final public void setParent(Statement parent) {
-		_parent = parent;
+		this.parent = parent;
 	}
 
 	abstract public Value execute(Env env);
@@ -175,10 +175,10 @@ abstract public class Statement {
 			}
 		}
 
-		String className = _location.getClassName();
-		String functionName = _location.getFunctionName();
-		String fileName = _location.getFileName();
-		int lineNumber = _location.getLineNumber();
+		String className = location.getClassName();
+		String functionName = location.getFunctionName();
+		String fileName = location.getFileName();
+		int lineNumber = location.getLineNumber();
 
 		if (className == null)
 			className = "";

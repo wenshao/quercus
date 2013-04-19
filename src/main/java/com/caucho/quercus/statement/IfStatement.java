@@ -38,56 +38,47 @@ import com.caucho.quercus.expr.Expr;
  * Represents an if statement.
  */
 public class IfStatement extends Statement {
-  private final Expr _test;
-  private final Statement _trueBlock;
-  private final Statement _falseBlock;
 
-  public IfStatement(Location location,
-                     Expr test,
-                     Statement trueBlock,
-                     Statement falseBlock)
-  {
-    super(location);
+    private final Expr      test;
+    private final Statement trueBlock;
+    private final Statement falseBlock;
 
-    _test = test;
-    _trueBlock = trueBlock;
-    _falseBlock = falseBlock;
+    public IfStatement(Location location, Expr test, Statement trueBlock, Statement falseBlock){
+        super(location);
 
-    if (_trueBlock != null)
-      _trueBlock.setParent(this);
+        this.test = test;
+        this.trueBlock = trueBlock;
+        this.falseBlock = falseBlock;
 
-    if (_falseBlock != null)
-      _falseBlock.setParent(this);
-  }
+        if (this.trueBlock != null) {
+            this.trueBlock.setParent(this);
+        }
 
-  protected Expr getTest()
-  {
-    return _test;
-  }
-
-  protected Statement getTrueBlock()
-  {
-    return _trueBlock;
-  }
-
-  protected Statement getFalseBlock()
-  {
-    return _falseBlock;
-  }
-
-  /**
-   * Executes the 'if' statement, returning any value.
-   */
-  public Value execute(Env env)
-  {
-    if (_test.evalBoolean(env)) {
-      return _trueBlock.execute(env);
+        if (this.falseBlock != null) {
+            this.falseBlock.setParent(this);
+        }
     }
-    else if (_falseBlock != null) {
-      return _falseBlock.execute(env);
+
+    public Expr getTest() {
+        return test;
     }
-    else
-      return null;
-  }
+
+    public Statement getTrueBlock() {
+        return trueBlock;
+    }
+
+    public Statement getFalseBlock() {
+        return falseBlock;
+    }
+
+    /**
+     * Executes the 'if' statement, returning any value.
+     */
+    public Value execute(Env env) {
+        if (test.evalBoolean(env)) {
+            return trueBlock.execute(env);
+        } else if (falseBlock != null) {
+            return falseBlock.execute(env);
+        } else return null;
+    }
 }
-
