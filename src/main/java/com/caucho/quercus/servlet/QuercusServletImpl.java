@@ -215,7 +215,9 @@ public class QuercusServletImpl extends HttpServlet {
 
                 // return;
             } catch (Throwable e) {
-                if (response.isCommitted()) e.printStackTrace(ws.getPrintWriter());
+                if (response.isCommitted()) {
+                    e.printStackTrace(ws.getPrintWriter());
+                }
 
                 ws = null;
 

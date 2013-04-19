@@ -1,19 +1,20 @@
 package com.alibaba.phpwall;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import junit.framework.TestCase;
 
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
-
 import com.caucho.quercus.QuercusContext;
 import com.caucho.quercus.env.Env;
+import com.caucho.quercus.page.InterpretedPage;
+import com.caucho.quercus.page.QuercusPage;
 import com.caucho.quercus.parser.QuercusParser;
 import com.caucho.quercus.program.QuercusProgram;
 import com.caucho.quercus.statement.Statement;
 import com.caucho.vfs.FilePath;
+import com.caucho.vfs.WriteStream;
+import com.caucho.vfs.WriterStreamImpl;
 
 public class WallTest_0 extends TestCase {
 	public void test_0() throws Exception {
@@ -21,8 +22,10 @@ public class WallTest_0 extends TestCase {
 		context.init();
 		context.start();
 		
-		Env env = new Env(context);
-		env.start();
+		Writer writer = new StringWriter(); 
+		WriterStreamImpl s = new WriterStreamImpl();
+        s.setWriter(writer);
+        WriteStream out = new WriteStream(s);
 		
 		QuercusParser parser = new QuercusParser(context);
 		
@@ -30,7 +33,9 @@ public class WallTest_0 extends TestCase {
 		FilePath path = new FilePath(str);
 		String encoding = "UTF-8";
 		QuercusProgram program = parser.parse(context, path, encoding);
-		program.init(env);
+		
+		QuercusPage page = new InterpretedPage(program);
+		Env env = new Env(context, page, out, null, null);
 		
 		Statement stmt = program.getStatement();
 		

@@ -63,315 +63,270 @@ import javax.script.SimpleBindings;
 /**
  * Script engine
  */
-public class QuercusScriptEngine
-  extends AbstractScriptEngine
-  implements Compilable
-{
-  private static final L10N L = new L10N(QuercusScriptEngine.class);
-  private static final Logger log
-    = Logger.getLogger(QuercusScriptEngine.class.getName());
+public class QuercusScriptEngine extends AbstractScriptEngine implements Compilable {
 
-  private final QuercusScriptEngineFactory _factory;
-  private QuercusContext _quercus;
+    private static final L10N                L               = new L10N(QuercusScriptEngine.class);
+    private static final Logger              log             = Logger.getLogger(QuercusScriptEngine.class.getName());
 
-  private String _scriptEncoding = "utf-8";
-  private boolean _isUnicodeSemantics;
+    private final QuercusScriptEngineFactory _factory;
+    private QuercusContext                   _quercus;
 
-  public QuercusScriptEngine()
-  {
-    this(new QuercusScriptEngineFactory(), true);
-  }
+    private String                           _scriptEncoding = "utf-8";
+    private boolean                          _isUnicodeSemantics;
 
-  public QuercusScriptEngine(boolean isUnicodeSemantics)
-  {
-    this(new QuercusScriptEngineFactory(), isUnicodeSemantics);
-  }
-
-  public QuercusScriptEngine(QuercusContext quercus)
-  {
-    this(new QuercusScriptEngineFactory(), quercus);
-  }
-
-  public QuercusScriptEngine(QuercusScriptEngineFactory factory)
-  {
-    this(factory, false);
-  }
-
-  public QuercusScriptEngine(QuercusScriptEngineFactory factory,
-                             boolean isUnicodeSemantics)
-  {
-    _factory = factory;
-    _isUnicodeSemantics = isUnicodeSemantics;
-  }
-
-  public QuercusScriptEngine(QuercusScriptEngineFactory factory,
-                             QuercusContext quercus)
-  {
-    _factory = factory;
-    _quercus = quercus;
-
-    _scriptEncoding = _quercus.getScriptEncoding();
-    _isUnicodeSemantics = quercus.isUnicodeSemantics();
-  }
-
-  /**
-   * Returns true if unicode.semantics (PHP6) is on.
-   */
-  public boolean isUnicodeSemantics()
-  {
-    return _isUnicodeSemantics;
-  }
-
-  /**
-   * True to turn on unicode.semantics (PHP6).
-   */
-  public void setUnicodeSemantics(boolean isUnicodeSemantics)
-  {
-    _isUnicodeSemantics = isUnicodeSemantics;
-  }
-
-  /**
-   * Returns the encoding to use for reading in scripts (default utf-8).
-   */
-  public String getScriptEncoding()
-  {
-    return _scriptEncoding;
-  }
-
-  /**
-   * Sets the encoding to use for reading in scripts.
-   */
-  public void setScriptEncoding(String encoding)
-  {
-    _scriptEncoding = encoding;
-
-    if (_quercus != null) {
-      _quercus.setScriptEncoding(encoding);
-    }
-  }
-
-  private static QuercusContext createQuercus(String scriptEncoding,
-                                              boolean isUnicodeSemantics)
-  {
-    QuercusContext quercus = new QuercusContext();
-
-    quercus.setScriptEncoding(scriptEncoding);
-    quercus.setUnicodeSemantics(isUnicodeSemantics);
-
-    quercus.init();
-    quercus.start();
-
-    return quercus;
-  }
-
-  /**
-   * Returns the Quercus object.
-   * php/214h
-   */
-  public QuercusContext getQuercus()
-  {
-    if (_quercus == null) {
-      _quercus = createQuercus(_scriptEncoding, _isUnicodeSemantics);
+    public QuercusScriptEngine(){
+        this(new QuercusScriptEngineFactory(), true);
     }
 
-    return _quercus;
-  }
+    public QuercusScriptEngine(boolean isUnicodeSemantics){
+        this(new QuercusScriptEngineFactory(), isUnicodeSemantics);
+    }
 
-  /**
-   * evaluates based on a reader.
-   */
-  public Object eval(Reader script, ScriptContext cxt)
-    throws ScriptException
-  {
-    QuercusContext quercus = getQuercus();
+    public QuercusScriptEngine(QuercusContext quercus){
+        this(new QuercusScriptEngineFactory(), quercus);
+    }
 
-    Env env = null;
+    public QuercusScriptEngine(QuercusScriptEngineFactory factory){
+        this(factory, false);
+    }
 
-    try {
-      QuercusProgram program;
+    public QuercusScriptEngine(QuercusScriptEngineFactory factory, boolean isUnicodeSemantics){
+        _factory = factory;
+        _isUnicodeSemantics = isUnicodeSemantics;
+    }
 
-      if (isUnicodeSemantics()) {
-        program = QuercusParser.parse(quercus, null, script);
-      }
-      else {
-        InputStream is
-          = EncoderStream.open(script, quercus.getScriptEncoding());
+    public QuercusScriptEngine(QuercusScriptEngineFactory factory, QuercusContext quercus){
+        _factory = factory;
+        _quercus = quercus;
 
-        ReadStream rs = new ReadStream(new VfsStream(is, null));
+        _scriptEncoding = _quercus.getScriptEncoding();
+        _isUnicodeSemantics = quercus.isUnicodeSemantics();
+    }
 
-        program = QuercusParser.parse(quercus, null, rs);
-      }
+    /**
+     * Returns true if unicode.semantics (PHP6) is on.
+     */
+    public boolean isUnicodeSemantics() {
+        return _isUnicodeSemantics;
+    }
 
-      Writer writer = cxt.getWriter();
+    /**
+     * True to turn on unicode.semantics (PHP6).
+     */
+    public void setUnicodeSemantics(boolean isUnicodeSemantics) {
+        _isUnicodeSemantics = isUnicodeSemantics;
+    }
 
-      WriteStream out;
+    /**
+     * Returns the encoding to use for reading in scripts (default utf-8).
+     */
+    public String getScriptEncoding() {
+        return _scriptEncoding;
+    }
 
-      if (writer != null) {
-        WriterStreamImpl s = new WriterStreamImpl();
-        s.setWriter(writer);
-        WriteStream os = new WriteStream(s);
+    /**
+     * Sets the encoding to use for reading in scripts.
+     */
+    public void setScriptEncoding(String encoding) {
+        _scriptEncoding = encoding;
 
-        os.setNewlineString("\n");
-
-        String outputEncoding = quercus.getOutputEncoding();
-
-        if (outputEncoding == null) {
-          outputEncoding = "utf-8";
+        if (_quercus != null) {
+            _quercus.setScriptEncoding(encoding);
         }
+    }
+
+    private static QuercusContext createQuercus(String scriptEncoding, boolean isUnicodeSemantics) {
+        QuercusContext quercus = new QuercusContext();
+
+        quercus.setScriptEncoding(scriptEncoding);
+        quercus.setUnicodeSemantics(isUnicodeSemantics);
+
+        quercus.init();
+        quercus.start();
+
+        return quercus;
+    }
+
+    /**
+     * Returns the Quercus object. php/214h
+     */
+    public QuercusContext getQuercus() {
+        if (_quercus == null) {
+            _quercus = createQuercus(_scriptEncoding, _isUnicodeSemantics);
+        }
+
+        return _quercus;
+    }
+
+    /**
+     * evaluates based on a reader.
+     */
+    public Object eval(Reader script, ScriptContext cxt) throws ScriptException {
+        QuercusContext quercus = getQuercus();
+
+        Env env = null;
 
         try {
-          os.setEncoding(outputEncoding);
+            QuercusProgram program;
+
+            if (isUnicodeSemantics()) {
+                program = QuercusParser.parse(quercus, null, script);
+            } else {
+                InputStream is = EncoderStream.open(script, quercus.getScriptEncoding());
+
+                ReadStream rs = new ReadStream(new VfsStream(is, null));
+
+                program = QuercusParser.parse(quercus, null, rs);
+            }
+
+            Writer writer = cxt.getWriter();
+
+            WriteStream out;
+
+            if (writer != null) {
+                WriterStreamImpl s = new WriterStreamImpl();
+                s.setWriter(writer);
+                WriteStream os = new WriteStream(s);
+
+                os.setNewlineString("\n");
+
+                String outputEncoding = quercus.getOutputEncoding();
+
+                if (outputEncoding == null) {
+                    outputEncoding = "utf-8";
+                }
+
+                try {
+                    os.setEncoding(outputEncoding);
+                } catch (Exception e) {
+                    log.log(Level.FINE, e.getMessage(), e);
+                }
+
+                out = os;
+            } else {
+                out = new NullWriteStream();
+            }
+
+            QuercusPage page = new InterpretedPage(program);
+
+            env = new Env(quercus, page, out, null, null);
+
+            env.setScriptContext(cxt);
+
+            // php/214c
+            env.start();
+
+            Object result = null;
+
+            try {
+                Value value = program.execute(env);
+
+                if (value != null) {
+                    // if (value instanceof JavaValue || value instanceof JavaAdapter) {
+                    // result = value.toJavaObject();
+                    // }
+                    // else {
+                    // result = value;
+                    // }
+
+                    result = value;
+                }
+            } catch (QuercusExitException e) {
+                // php/2148
+            }
+
+            out.flushBuffer();
+            out.free();
+
+            // flush buffer just in case
+            //
+            // jrunscript in interactive mode does not automatically flush its
+            // buffers after every input, so output to stdout will not be seen
+            // until the output buffer is full
+            //
+            // http://bugs.caucho.com/view.php?id=1914
+            writer.flush();
+
+            return result;
+
+            /*
+             * } catch (ScriptException e) { throw e;
+             */
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ScriptException(e);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (env != null) {
+                env.close();
+            }
         }
-        catch (Exception e) {
-          log.log(Level.FINE, e.getMessage(), e);
+    }
+
+    /**
+     * evaluates based on a script.
+     * 
+     * @return Value object, or null if script returned no value
+     */
+    public Object eval(String script, ScriptContext cxt) throws ScriptException {
+        return eval(new StringReader(script), cxt);
+    }
+
+    /**
+     * compiles based on a reader.
+     */
+    public CompiledScript compile(Reader script) throws ScriptException {
+        try {
+            ReadStream reader = ReaderStream.open(script);
+
+            QuercusProgram program = QuercusParser.parse(getQuercus(), null, reader);
+
+            return new QuercusCompiledScript(this, program);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ScriptException(e);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        out = os;
-      }
-      else {
-        out = new NullWriteStream();
-      }
+    /**
+     * evaluates based on a script.
+     */
+    public CompiledScript compile(String script) throws ScriptException {
+        return compile(new StringReader(script));
+    }
 
-      QuercusPage page = new InterpretedPage(program);
+    /**
+     * Returns the engine's factory.
+     */
+    public QuercusScriptEngineFactory getFactory() {
+        return _factory;
+    }
 
-      env = new Env(quercus, page, out, null, null);
+    /**
+     * Creates a bindings.
+     */
+    public Bindings createBindings() {
+        return new SimpleBindings();
+    }
 
-      env.setScriptContext(cxt);
+    /**
+     * Shuts down Quercus and free resources.
+     */
+    public void close() {
+        if (_quercus != null) {
+            _quercus.close();
 
-      // php/214c
-      env.start();
-
-      Object result = null;
-
-      try {
-        Value value = program.execute(env);
-
-        if (value != null) {
-          //if (value instanceof JavaValue || value instanceof JavaAdapter) {
-          //  result = value.toJavaObject();
-          //}
-          //else {
-          //  result = value;
-          //}
-
-          result = value;
+            _quercus = null;
         }
-      }
-      catch (QuercusExitException e) {
-        //php/2148
-      }
-
-      out.flushBuffer();
-      out.free();
-
-      // flush buffer just in case
-      //
-      // jrunscript in interactive mode does not automatically flush its
-      // buffers after every input, so output to stdout will not be seen
-      // until the output buffer is full
-      //
-      // http://bugs.caucho.com/view.php?id=1914
-      writer.flush();
-
-      return result;
-
-      /*
-    } catch (ScriptException e) {
-      throw e;
-      */
     }
-    catch (RuntimeException e) {
-      throw e;
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "[]";
     }
-    catch (Exception e) {
-      throw new ScriptException(e);
-    }
-    catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
-    finally {
-      if (env != null) {
-        env.close();
-      }
-    }
-  }
-
-  /**
-   * evaluates based on a script.
-   *
-   * @return Value object, or null if script returned no value
-   */
-  public Object eval(String script, ScriptContext cxt)
-    throws ScriptException
-  {
-    return eval(new StringReader(script), cxt);
-  }
-
-  /**
-   * compiles based on a reader.
-   */
-  public CompiledScript compile(Reader script)
-    throws ScriptException
-  {
-    try {
-      ReadStream reader = ReaderStream.open(script);
-
-      QuercusProgram program = QuercusParser.parse(getQuercus(), null, reader);
-
-      return new QuercusCompiledScript(this, program);
-    }
-    catch (RuntimeException e) {
-      throw e;
-    }
-    catch (Exception e) {
-      throw new ScriptException(e);
-    }
-    catch (Throwable e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   * evaluates based on a script.
-   */
-  public CompiledScript compile(String script)
-    throws ScriptException
-  {
-    return compile(new StringReader(script));
-  }
-
-  /**
-   * Returns the engine's factory.
-   */
-  public QuercusScriptEngineFactory getFactory()
-  {
-    return _factory;
-  }
-
-  /**
-   * Creates a bindings.
-   */
-  public Bindings createBindings()
-  {
-    return new SimpleBindings();
-  }
-
-  /**
-   * Shuts down Quercus and free resources.
-   */
-  public void close()
-  {
-    if (_quercus != null) {
-      _quercus.close();
-
-      _quercus = null;
-    }
-  }
-
-  @Override
-  public String toString()
-  {
-    return getClass().getSimpleName() + "[]";
-  }
 }
-

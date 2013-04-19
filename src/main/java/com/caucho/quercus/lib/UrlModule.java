@@ -103,6 +103,10 @@ public class UrlModule extends AbstractQuercusModule {
 
     private static final StringValue FRAGMENT_V       = new ConstStringValue("fragment");
     private static final StringValue FRAGMENT_U       = new UnicodeBuilderValue("fragment");
+    
+    public UrlModule() {
+        
+    }
 
     /**
      * Encodes base64
